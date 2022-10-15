@@ -1,3 +1,10 @@
 # Git Ignore Rules for raytracing.github.io
 
 /build/
+*.opendb
+*.suo
+*.user
+_ReSharper.*
+bin
+obj
+
