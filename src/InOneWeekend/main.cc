@@ -9,15 +9,23 @@
 // along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 //==============================================================================================
 
-#include "rtweekend.h"
+#include "../common/rtweekend.h"
 
-#include "camera.h"
-#include "color.h"
+#include "../common/camera.h"
+#include "../common/color.h"
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
-
+#define STB_IMAGE_IMPLEMENTATION
+#include "../common/external/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../common/external/stb_image_write.h"
+#define STBI_MSC_SECURE_CRT
 #include <iostream>
+#include <fstream>
+#include <time.h>
+#include <cstring>
+#include <string>
 
 
 color ray_color(const ray& r, const hittable& world, int depth) {
@@ -98,7 +106,9 @@ int main() {
     const int samples_per_pixel = 10;
     const int max_depth = 50;
 
-    // World
+#define CHANNELS 3
+
+    uint8_t* pixels = new uint8_t[image_width * image_height * CHANNELS];    // World
 
     auto world = random_scene();
 
@@ -114,7 +124,23 @@ int main() {
 
     // Render
 
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    std::ofstream myfile;
+    myfile.open("frame.ppm");
+    //struct tm now;
+    // current date/time based on current system
+    time_t now = time(0);
+    tm* ltm = localtime(&now);
+    // convert now to string form
+    char* dt = ctime(&now);
+    char monBuffer[4];
+    snprintf(monBuffer, 4, "%02d", ltm->tm_mon);
+    std::string fdt = std::to_string(ltm->tm_year + 1900)+std::to_string(ltm->tm_mon)+std::to_string(ltm->tm_mday)+std::to_string(ltm->tm_hour) + std::to_string(ltm->tm_min) + std::to_string(ltm->tm_sec);
+
+    std::cout << "The local date and time is: " << dt + fdt<< std::endl;
+
+    int index = 0;
+
+    myfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
     for (int j = image_height-1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
@@ -126,9 +152,41 @@ int main() {
                 ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, world, max_depth);
             }
-            write_color(std::cout, pixel_color, samples_per_pixel);
+            write_color(myfile, pixels, index, pixel_color, samples_per_pixel);
+            index += 3;
         }
     }
-
+    //stbi_write_jpg("stbjpg3.jpg", image_width, image_height, 3, pixels, 100);
+    stbi_write_png("raytest.png", image_width, image_height, 3, pixels, image_width * 3);
+    delete[] pixels;
+    myfile.close();
     std::cerr << "\nDone.\n";
 }
+/*
+
+
+int index = 0;
+for (int j = height - 1; j >= 0; --j)
+{
+    for (int i = 0; i < width; ++i)
+    {
+        float r = (float)i / (float)width;
+        float g = (float)j / (float)height;
+        float b = 0.2f;
+        int ir = int(255.99 * r);
+        int ig = int(255.99 * g);
+        int ib = int(255.99 * b);
+
+        pixels[index++] = ir;
+        pixels[index++] = ig;
+        pixels[index++] = ib;
+    }
+}
+
+// if CHANNEL_NUM is 4, you can use alpha channel in png
+stbi_write_png("stbpng.png", width, height, CHANNEL_NUM, pixels, width * CHANNEL_NUM);
+
+// You have to use 3 comp for complete jpg file. If not, the image will be grayscale or nothing.
+stbi_write_jpg("stbjpg3.jpg", width, height, 3, pixels, 100);
+delete[] pixels;
+*/
