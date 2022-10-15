@@ -124,7 +124,6 @@ int main(int argc, char* argv[]) {
 
     // Render
 
-    //struct tm now;
     // current date/time based on current system
     time_t now = time(0);
     tm* ltm = localtime(&now);
@@ -143,14 +142,10 @@ int main(int argc, char* argv[]) {
     snprintf(minBuffer, 4, "%02d", ltm->tm_min);
     snprintf(secBuffer, 4, "%02d", ltm->tm_sec);
     std::string fdt = std::string(yearBuffer) + std::string(monBuffer) + std::string(mdayBuffer) + std::string(hourBuffer) + std::string(minBuffer) + std::string(secBuffer);
-    //std::ofstream myfile;
-    //myfile.open("ray." + fdt + ".png");
 
     std::cout << "The local date and time is: " << dt + fdt<< std::endl;
 
     int index = 0;
-
-    //myfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
     for (int j = image_height-1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
@@ -166,11 +161,9 @@ int main(int argc, char* argv[]) {
             index += 3;
         }
     }
-    //stbi_write_jpg("stbjpg3.jpg", image_width, image_height, 3, pixels, 100);
-    std::string filename = "ray." + fdt + ".png";
+    std::string filename = "rendered.001." + fdt + ".png";
     stbi_write_png(filename.c_str(), image_width, image_height, 3, pixels, image_width * 3);
     delete[] pixels;
-    //myfile.close();
     std::cerr << "\nDone.\n";
 }
 /*
