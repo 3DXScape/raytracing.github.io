@@ -16,6 +16,7 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
+#include "triangle.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../common/external/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
