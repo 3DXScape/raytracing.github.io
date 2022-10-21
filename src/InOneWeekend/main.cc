@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
     // Image
 
     const auto aspect_ratio = 16.0 / 9.0;
-    const int image_width = 2400;
+    const int image_width = 4800;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
     const int samples_per_pixel = 40;
     const int max_depth = 50;
@@ -124,15 +124,19 @@ int main(int argc, char* argv[]) {
     point3 lookat(0,0,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = 10.0;
-    auto aperture = 0.1;
+    auto aperture = 0.01;// 0.1;
 
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
     // Render
 
     // current date/time based on current system
+
+    struct tm ltm;
     time_t now = time(0);
-    tm* ltm = localtime(&now);
+    localtime_s(&ltm, &now);
+
+
     // convert now to string form
     char* dt = ctime(&now);
     char yearBuffer[4];
@@ -141,12 +145,12 @@ int main(int argc, char* argv[]) {
     char hourBuffer[4];
     char minBuffer[4];
     char secBuffer[4];
-    snprintf(yearBuffer, 4, "%02d", ltm->tm_year + 1900);
-    snprintf(monBuffer, 4, "%02d", ltm->tm_mon);
-    snprintf(mdayBuffer, 4, "%02d", ltm->tm_mday);
-    snprintf(hourBuffer, 4, "%02d", ltm->tm_hour);
-    snprintf(minBuffer, 4, "%02d", ltm->tm_min);
-    snprintf(secBuffer, 4, "%02d", ltm->tm_sec);
+    snprintf(yearBuffer, 4, "%02d", ltm.tm_year + 1900);
+    snprintf(monBuffer, 4, "%02d", ltm.tm_mon);
+    snprintf(mdayBuffer, 4, "%02d", ltm.tm_mday);
+    snprintf(hourBuffer, 4, "%02d", ltm.tm_hour);
+    snprintf(minBuffer, 4, "%02d", ltm.tm_min);
+    snprintf(secBuffer, 4, "%02d", ltm.tm_sec);
     std::string fdt = std::string(yearBuffer) + std::string(monBuffer) + std::string(mdayBuffer) + std::string(hourBuffer) + std::string(minBuffer) + std::string(secBuffer);
 
     std::cout << "The local date and time is: " << dt + fdt<< std::endl;
@@ -170,6 +174,7 @@ int main(int argc, char* argv[]) {
     std::string filename = "rendered.001." + fdt + ".png";
     stbi_write_png(filename.c_str(), image_width, image_height, 3, pixels, image_width * 3);
     delete[] pixels;
+    std::cerr << filename << "\nDone.\n";
     std::cerr << "\nDone.\n";
 }
 /*

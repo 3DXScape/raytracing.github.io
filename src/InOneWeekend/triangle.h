@@ -2,7 +2,6 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 #include "../common/rtweekend.h"
-
 #include "hittable.h"
 
 class triangle : public hittable {
@@ -40,6 +39,12 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
         vec3 e0(vertex1 - vertex2);
         vec3 e1(vertex0 - vertex2);
         vec3 normal(cross(e0, e1));
+        double normalLength = normal.length();
+        // require that we are working in metres so the tolerance is 1/10 mm
+        if (fabs(normalLength < 0.0001))
+        {
+            return false;
+        }
         normal = normal / normal.length();
         rec.set_face_normal(r, normal);
         rec.mat_ptr = mat_ptr;
