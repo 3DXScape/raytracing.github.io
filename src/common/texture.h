@@ -105,7 +105,8 @@ class image_texture : public texture {
         }
 
         ~image_texture() {
-            STBI_FREE(data);
+            free(data);
+            //STBI_FREE(data);
         }
 
         virtual color value(double u, double v, const vec3& p) const override {

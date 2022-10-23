@@ -13,6 +13,9 @@
 
 #include "../common/camera.h"
 #include "../common/color.h"
+#include "aarect.h"
+#include "box.h"
+
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
@@ -29,24 +32,43 @@
 #include <string>
 
 
-color ray_color(const ray& r, const hittable& world, int depth) {
+color ray_color(
+    const ray& r,
+    const color& background,
+    const hittable& world,
+    shared_ptr<hittable> lights,
+    int depth
+) {
     hit_record rec;
 
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
-        return color(0,0,0);
+        return color(0, 0, 0);
 
-    if (world.hit(r, 0.001, infinity, rec)) {
-        ray scattered;
-        color attenuation;
-        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-            return attenuation * ray_color(scattered, world, depth-1);
-        return color(0,0,0);
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, 0.001, infinity, rec))
+        return background;
+
+    scatter_record srec;
+    color emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+
+    if (!rec.mat_ptr->scatter(r, rec, srec))
+        return emitted;
+
+    if (srec.is_specular) {
+        return srec.attenuation
+            * ray_color(srec.specular_ray, background, world, lights, depth - 1);
     }
 
-    vec3 unit_direction = unit_vector(r.direction());
-    auto t = 0.5*(unit_direction.y() + 1.0);
-    return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
+    auto light_ptr = make_shared<hittable_pdf>(lights, rec.p);
+    mixture_pdf p(light_ptr, srec.pdf_ptr);
+    ray scattered = ray(rec.p, p.generate(), r.time());
+    auto pdf_val = p.value(scattered.direction());
+
+    return emitted
+        + srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+        * ray_color(scattered, background, world, lights, depth - 1)
+        / pdf_val;
 }
 
 
@@ -115,6 +137,13 @@ int main(int argc, char* argv[]) {
 
     uint8_t* pixels = new uint8_t[image_width * image_height * CHANNELS];    // World
 
+    auto lights = make_shared<hittable_list>();
+    lights->add(make_shared<xz_rect>(213, 343, 227, 332, 554, shared_ptr<material>()));
+    lights->add(make_shared<sphere>(point3(5, 5, 5), 90, shared_ptr<material>()));
+
+    //auto world = cornell_box();
+
+    color background(0, 0, 0);
     auto world = random_scene();
 
     // Camera
@@ -165,7 +194,8 @@ int main(int argc, char* argv[]) {
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j + random_double()) / (image_height-1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, max_depth);
+                //pixel_color += ray_color(r, world, max_depth);
+                pixel_color += ray_color(r, background, world, lights, max_depth);
             }
             write_color(pixels, index, pixel_color, samples_per_pixel);
             index += 3;
