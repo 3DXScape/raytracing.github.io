@@ -142,7 +142,7 @@ bool RayIntersectsTriangle(vec3 rayOrigin,
     vec3& outIntersectionPoint,
     double& t)
 {
-    const float EPSILON = 0.0000001;
+    const double EPSILON = 0.0000001;
     vec3 vertex0 = inTriangle->vertex0;
     vec3 vertex1 = inTriangle->vertex1;
     vec3 vertex2 = inTriangle->vertex2;
